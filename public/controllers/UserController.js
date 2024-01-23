@@ -39,13 +39,14 @@ let Login = async (req, res) => {
   }
 };
 
-//!from chatGPT
+//!from chatGPT now from my mind i understand it
 
 let follow = async (req, res) => {
   try {
     const { userIdToFollow } = req.params;
-
+    console.log(req.params);
     const userToFollow = await User.findById(userIdToFollow);
+    console.log(userToFollow);
     if (!userToFollow) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -54,7 +55,7 @@ let follow = async (req, res) => {
       follower: req.user.id,
       following: userIdToFollow,
     });
-
+    console.log(existingFollow);
     if (existingFollow) {
       return res.status(400).json({ Error: "Already following this user" });
     }
@@ -63,9 +64,20 @@ let follow = async (req, res) => {
       follower: req.user.id,
       following: userIdToFollow,
     });
+    //*Update the follower's following list
+    await User.findByIdAndUpdate(req.user.id, {
+      $push: { following: userIdToFollow },
+    });
 
+    //*Update the user being followed's followers list
+    await User.findByIdAndUpdate(userIdToFollow, {
+      $push: { followers: req.user.id },
+    });
+
+    console.log(newFollow);
     res.json({ success: true, follow: newFollow });
   } catch (error) {
+    console.error("Error in userController Follow:", error);
     res
       .status(500)
       .json({ error: "Internal Server Error from userController Follow" });
@@ -87,20 +99,24 @@ let unfollow = async (req, res) => {
     });
 
     if (existingFollow) {
-      req.user.following = req.user.following.filter(
-        (follow) => follow.toString() !== existingFollow.id
-      );
-      await req.user.save();
-
-      userToUnfollow.followers = userToUnfollow.followers.filter(
-        (follow) => follow.toString() !== existingFollow.id
-      );
-      await userToUnfollow.save();
+      return res.status(400).json({ error: "Not following this user" });
     }
+    //* Update the follower's following list
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { following: userIdToUnfollow },
+    });
 
-    res.json({ success: true });
+    //* Update the user being unfollowed's followers list
+    await User.findByIdAndUpdate(userIdToUnfollow, {
+      $pull: { followers: req.user.id },
+    });
+
+    res.json({ success: true, unfollow: existingFollow });
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error in userController Unfollow:", error);
+    res
+      .status(500)
+      .json({ error: "Internal Server Error from userController Unfollow" });
   }
 };
 

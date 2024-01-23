@@ -6,3 +6,4 @@ const followSchema = mongoos.Schema({
 });
 
 let Follow = mongoos.model("Follow", followSchema);
+module.exports = Follow;
