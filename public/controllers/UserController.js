@@ -55,24 +55,20 @@ let follow = async (req, res) => {
       following: userIdToFollow,
     });
 
-    if (!existingFollow) {
-      const follow = Follow({
-        follower: req.user.id,
-        following: userIdToFollow,
-      });
-
-      await follow.save();
-
-      req.user.following.push(follow);
-      await req.user.save();
-
-      userToFollow.followers.push(follow);
-      await userToFollow.save();
+    if (existingFollow) {
+      return res.status(400).json({ Error: "Already following this user" });
     }
+    //!create new follower
+    let newFollow = await Follow.create({
+      follower: req.user.id,
+      following: userIdToFollow,
+    });
 
-    res.json({ success: true });
+    res.json({ success: true, follow: newFollow });
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error from userController Follow" });
   }
 };
 
