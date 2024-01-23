@@ -14,8 +14,8 @@ let Register = async (req, res) => {
       });
     }
     let hash = await bcrypt.hash(password, 10);
-    let user = User({ username, password: hash });
-    await user.save();
+    let user = await User.create({ username, password: hash });
+
     let token = JWT.sign({ id: user.id }, "aweda-secret-key");
     res.json({ token, user: { id: user.id, username: user.username } });
   } catch (e) {
