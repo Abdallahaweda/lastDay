@@ -26,9 +26,15 @@ let GetUserBlogs = async (req, res) => {
 let CreateBlog = async (req, res) => {
   try {
     let { title, body, photo, tags } = req.body;
-    let blog = Blog({ title, body, photo, author: req.user.id, tags });
-    await blog.save();
-    res.json({ success: true });
+    let blog = await Blog.create({
+      title,
+      body,
+      photo,
+      author: req.user.id,
+      tags,
+    });
+
+    res.json({ success: true, blog });
   } catch (e) {
     res
       .status(500)
